@@ -1,6 +1,6 @@
 # extract_headers
 
-Extract_headers is a bash tool for automatically extracting headers from all c
+**Extract_headers** is a bash tool for automatically extracting headers from all c
 files in directory. *extract_headers* supports recursive searching of files so
 you do not need to execute it in every directory containing your c files. Files
 **MUST** follow the 42 school norm for extraction to work. 
