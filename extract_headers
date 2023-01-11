@@ -1,6 +1,19 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    extract_headers                                    :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: emcnab <marvin@42.fr>                      +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2023/01/11 17:24:36 by emcnab            #+#    #+#              #
+#    Updated: 2023/01/11 17:37:34 by emcnab           ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 #!/bin/bash
 
 source colors.sh
+source should_include.sh
 
 # processes the options passed to the script
 options=$(getopt -o f:,d:,v,h -l file:,dir:,verbose,help -- "$@")
@@ -164,10 +177,10 @@ for file in ${files[@]}; do
 		# gets function prototype
 		function=${prototype[i]}
 
-		# ...if "size_t" is found...
-		if [[ ! -v map_include["size_t"] && $function == *"size_t"* ]]; then
+		# ...if "stddef" should be included...
+		if [[ ! -v map_include["stddef"] && should_include_stddef $function ]]; then
 			# includes stddef.h
-			map_include["size_t"]=1
+			map_include["stddef"]=1
 			import_extra=1
 			echo "# include <stddef.h>" >> $name_file
 			# logs info message if in verbose mode
@@ -175,10 +188,10 @@ for file in ${files[@]}; do
 				echo -e "$BOLD$FG_BLUE >> Including$BOLD$FG_WHITE stddef.h$NORMAL"
 			fi
 		fi
-		# ...if "bool" is found...
-		if [[ ! -v map_include["bool"] && $function == *"bool"* ]]; then
+		# ...if "stdbool" should be included...
+		if [[ ! -v map_include["stdbool"] && should_include_stdbool $function ]]; then
 			# includes stdbool.h
-			map_include["bool"]=1
+			map_include["stdbool"]=1
 			import_extra=1
 			echo "# include <stdbool.h>" >> $name_file
 			# logs info message if in verbose mode
@@ -186,10 +199,10 @@ for file in ${files[@]}; do
 				echo -e "$BOLD$FG_BLUE >> Including$BOLD$FG_WHITE stdbool.h$NORMAL"
 			fi
 		fi
-		# ...if "va_list" is found...
-		if [[ ! -v map_include["va_list"] && $function == *"va_list"* ]]; then
+		# ...if "stdarg" should be included...
+		if [[ ! -v map_include["stdarg"] && should_include_stdarg $function ]]; then
 			# includes stdarg.h
-			map_include["va_list"]=1
+			map_include["stdarg"]=1
 			import_extra=1
 			echo "# include <stdarg.h>" >> $name_file
 			# logs info message if in verbose mode
