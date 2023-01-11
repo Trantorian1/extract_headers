@@ -1,15 +1,3 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    extract_headers                                    :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: emcnab <marvin@42.fr>                      +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2023/01/11 17:24:36 by emcnab            #+#    #+#              #
-#    Updated: 2023/01/11 17:37:34 by emcnab           ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
 #!/bin/bash
 
 source colors.sh
@@ -178,7 +166,7 @@ for file in ${files[@]}; do
 		function=${prototype[i]}
 
 		# ...if "stddef" should be included...
-		if [[ ! -v map_include["stddef"] && should_include_stddef $function ]]; then
+		if [[ ! -v map_include["stddef"] && $(should_include_stddef $function) ]]; then
 			# includes stddef.h
 			map_include["stddef"]=1
 			import_extra=1
@@ -189,7 +177,7 @@ for file in ${files[@]}; do
 			fi
 		fi
 		# ...if "stdbool" should be included...
-		if [[ ! -v map_include["stdbool"] && should_include_stdbool $function ]]; then
+		if [[ ! -v map_include["stdbool"] && $(should_include_stdbool $function) ]]; then
 			# includes stdbool.h
 			map_include["stdbool"]=1
 			import_extra=1
@@ -200,7 +188,7 @@ for file in ${files[@]}; do
 			fi
 		fi
 		# ...if "stdarg" should be included...
-		if [[ ! -v map_include["stdarg"] && should_include_stdarg $function ]]; then
+		if [[ ! -v map_include["stdarg"] && $(should_include_stdarg $function) ]]; then
 			# includes stdarg.h
 			map_include["stdarg"]=1
 			import_extra=1
