@@ -19,6 +19,9 @@ or if you want to extract only one file
 ./extract_headers --file path/to/file
 ```
 
+Keep in mind that all header files will be extracted to the same directory
+*extract_headers* is being executed from.
+
 ## Standard Header Inclusion
 
 Standard library headers will automatically be included when needed. Please note
