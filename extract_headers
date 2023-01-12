@@ -166,36 +166,63 @@ for file in ${files[@]}; do
 		function=${prototype[i]}
 
 		# ...if "stddef" should be included...
-		if [[ ! -v map_include["stddef"] && $(should_include_stddef $function) ]]; then
-			# includes stddef.h
-			map_include["stddef"]=1
-			import_extra=1
-			echo "# include <stddef.h>" >> $name_file
-			# logs info message if in verbose mode
-			if [[ -v map_opts["verbose"] ]]; then
-				echo -e "$BOLD$FG_BLUE >> Including$BOLD$FG_WHITE stddef.h$NORMAL"
+		if [[ ! -v map_include["stddef"] ]]; then
+			# we only check for stddef if it hasn't been included already
+			should_include_stddef $function
+			if [[ $? == 1 ]]; then
+				# includes stddef.h
+				map_include["stddef"]=1
+				import_extra=1
+				echo "# include <stddef.h>" >> $name_file
+				# logs info message if in verbose mode
+				if [[ -v map_opts["verbose"] ]]; then
+					echo -e "$BOLD$FG_BLUE >> Including$BOLD$FG_WHITE stddef.h$NORMAL"
+				fi
 			fi
 		fi
 		# ...if "stdbool" should be included...
-		if [[ ! -v map_include["stdbool"] && $(should_include_stdbool $function) ]]; then
-			# includes stdbool.h
-			map_include["stdbool"]=1
-			import_extra=1
-			echo "# include <stdbool.h>" >> $name_file
-			# logs info message if in verbose mode
-			if [[ -v map_opts["verbose"] ]]; then
-				echo -e "$BOLD$FG_BLUE >> Including$BOLD$FG_WHITE stdbool.h$NORMAL"
+		if [[ ! -v map_include["stdbool"] ]]; then
+			# we only check for stdbool if it hasn't been included already
+			should_include_stdbool $function
+			if [[ $? == 1 ]]; then
+				# includes stdbool.h
+				map_include["stdbool"]=1
+				import_extra=1
+				echo "# include <stdbool.h>" >> $name_file
+				# logs info message if in verbose mode
+				if [[ -v map_opts["verbose"] ]]; then
+					echo -e "$BOLD$FG_BLUE >> Including$BOLD$FG_WHITE stdbool.h$NORMAL"
+				fi
 			fi
 		fi
 		# ...if "stdarg" should be included...
-		if [[ ! -v map_include["stdarg"] && $(should_include_stdarg $function) ]]; then
-			# includes stdarg.h
-			map_include["stdarg"]=1
-			import_extra=1
-			echo "# include <stdarg.h>" >> $name_file
-			# logs info message if in verbose mode
-			if [[ -v map_opts["verbose"] ]]; then
-				echo -e "$BOLD$FG_BLUE >> Including$BOLD$FG_WHITE stdarg.h$NORMAL"
+		if [[ ! -v map_include["stdarg"] ]]; then
+			# we only check for stdarg if it hasn.t been included already
+			should_include_stdarg $function
+			if [[ $? == 1 ]]; then
+				# includes stdarg.h
+				map_include["stdarg"]=1
+				import_extra=1
+				echo "# include <stdarg.h>" >> $name_file
+				# logs info message if in verbose mode
+				if [[ -v map_opts["verbose"] ]]; then
+					echo -e "$BOLD$FG_BLUE >> Including$BOLD$FG_WHITE stdarg.h$NORMAL"
+				fi
+			fi
+		fi
+		# ...if "stdint" should be included...
+		if [[ ! -v map_include["stdint"] ]]; then
+			# we only check for stdint if it hasn't been included already
+			should_include_stdint $function
+			if [[ $? == 1 ]]; then
+				# includes stdint.h
+				map_include["stdint"]=1
+				import_extra=1
+				echo "# include <stdint.h>" >> $name_file
+				# logs info message if in verbose mode
+				if [[ -v map_opts["verbose"] ]]; then
+					echo -e "$BOLD$FG_BLUE >> Including$BOLD$FG_WHITE stdint.h$NORMAL"
+				fi
 			fi
 		fi
 		# ...if a struct is found...
