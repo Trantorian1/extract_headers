@@ -555,7 +555,7 @@ main()
 			unset map_include[$included]
 		done
 		for included in ${!map_struct[@]}; do
-			unset map_struct[$included]=0
+			unset map_struct[$included]
 		done
 
 		# displays max tab index if verbose output is enabled
@@ -622,7 +622,7 @@ main()
 
 		# displays norminette result if in verbose mode
 		if [[ -v map_opts["verbose"] ]]; then
-			norminette_output=$(norminette $name_file)
+			norminette_output=$(norminette $name_file)	# gets norminette output
 			echo -e "$BOLD$FG_MAGENTA[ Norminette ]$NORMAL"
 			if [[ $norminette_output == *"OK"* ]]; then	
 				echo -e " $BOLD$FG_GREEN■ $norminette_output$NORMAL"
