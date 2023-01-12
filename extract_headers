@@ -579,7 +579,7 @@ main()
 
 		# displays norminette result if in verbose mode
 		if [[ -v map_opts["verbose"] ]]; then
-			norminette_output=$(norminette $file)
+			norminette_output=$(norminette $name_file)
 			echo -e "$BOLD$FG_MAGENTA[ Norminette ]$NORMAL"
 			if [[ $norminette_output == *"OK"* ]]; then	
 				echo -e " $BOLD$FG_GREEN■ $norminette_output$NORMAL"
