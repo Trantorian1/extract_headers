@@ -5,10 +5,7 @@ files in directory. *extract_headers* supports recursive searching of files so
 you do not need to execute it in every directory containing your c files. Files
 **MUST** follow the 42 school norm for extraction to work. 
 
-To use *extract_headers*, run the following command. Please note that
-*extract_headers*, *create_header* and *colors.sh* must be in the same directory
-for this to work.
-
+To use *extract_headers*, run the following command.
 ```bash
 ./extract_headers --dir path/to/source/files
 ```
@@ -27,6 +24,13 @@ Keep in mind that all header files will be extracted to the same directory
 Standard library headers will automatically be included when needed. Please note
 that at these early stages in development only a few standard headers are
 supported, and more will be added according to feedback.
+
+supported headers:
+
+* stddef
+* stdbool
+* stdarg
+* stdint
 
 ## Structure Inclusion
 
