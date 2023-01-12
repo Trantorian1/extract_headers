@@ -206,7 +206,7 @@ should_include_unistd()
 {
 	local prototype=$1
 	for typedef in ${FLAG_UNISTD[@]}; do
-		if [[ prototype == *"$typedef"* ]]; then
+		if [[ $prototype == *"$typedef"* ]]; then
 			return 1
 		fi
 	done
