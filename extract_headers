@@ -62,6 +62,15 @@ FLAG_STDINT=(
 	"uintmax_t"
 )
 
+FLAG_UNISTD=(
+	"ssize_t"
+	"uid_t"
+	"gid_t"
+	"off_t"
+	"pid_t"
+	"useconds_t"
+)
+
 # banner, to be formatted to match 42 norm
 # '_' marks where insertion will take place
 BANNER=(
@@ -179,6 +188,25 @@ should_include_stdint()
 	local prototype=$1
 	for typedef in ${FLAG_STDINT[@]}; do
 		if [[ $prototype == *"$typedef"* ]]; then
+			return 1
+		fi
+	done
+	return 0
+}
+
+#######################################
+# Determines wether a function prototype
+# requires unistd
+# Arguments:
+# 	Function to check, a string
+# Returns:
+# 	1 if function requires unistd, 0 otherzise
+#######################################
+should_include_unistd()
+{
+	local prototype=$1
+	for typedef in ${FLAG_UNISTD[@]}; do
+		if [[ prototype == *"$typedef"* ]]; then
 			return 1
 		fi
 	done
@@ -474,6 +502,21 @@ main()
 					# logs info message if in verbose mode
 					if [[ -v map_opts["verbose"] ]]; then
 						echo -e "$BOLD$FG_BLUE >> Including$BOLD$FG_WHITE stdint.h$NORMAL"
+					fi
+				fi
+			fi
+			# ...if "unistd" should be included...
+			if [[ ! -v map_include["unistd"] ]]; then
+				# we only check for unistd if it hasn't been included already
+				should_include_unistd $function
+				if [[ $? == 1 ]]; then
+					# includes stdint.h
+					map_include["unistd"]=1
+					import_extra=1
+					echo "# include <unistd.h>" >> $name_file
+					# logs info message if in verbose mode
+					if [[ -v map_opts["verbose"] ]]; then
+						echo -e "$BOLD$FG_BLUE >> Including$BOLD$FG_WHITE unistd.h$NORMAL"
 					fi
 				fi
 			fi
