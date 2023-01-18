@@ -92,19 +92,21 @@ Extract_headers is a program designed to facilitate header file generation      
 for 42 school projects.                                                            \n\
                                                                                    \n\
 It detects c files at the specified path and extracts all function prototypes      \n\
-into a new header file, automatically imporing the necessary stdlib and            \n\
+into a new header file, automatically importing the necessary standard and         \n\
 structure headers. Please note that generated header files will be overwritten     \n\
 each time extract_headers is called.                                               \n\
                                                                                    \n\
 Structures can only be detected if they follow the naming convention \"t_s_name\". \n\
 These will be automatically included in the header \"s_name.h\". So for example    \n\
 if your function prototypes use \"t_s_deque\" then \"s_deque.h\" will automatically\n\
-be imported. Please note that you still have to create this file, this is only     \n\
-done so as to simplify structure inclusion, not automate it.                       \n\
+be imported. Please note that you still have to create this file, automatic        \n\
+inclusion is only done so as to simplify structure usage, not automate it.         \n\
                                                                                    \n\
   Usage:                                                                           \n\
     extract_headers -h/--help     displays help info for extract_headers           \n\
     extract_headers -d/--dir      specifies where to look for c files              \n\
+	extract_headers -f/--file     specifies single input file                      \n\
+	extract_headers -o/--output   specifies output file                            \n\
     extract_headers -v/--verbose  toggles extra output                             \n\
                                                                                    \n\
   Supported headers:                                                               \n\
@@ -278,6 +280,7 @@ parse_arguments()
 		map_opts["dir"]="."
 	fi
 
+	IFS_OLD=$IFS
 	IFS=$'\n'
 }
 
@@ -407,6 +410,9 @@ write_file_bottom()
 		unset map_struct[$included]
 	done
 
+	# FUCK IFS FUCK FUCK FUCK FUCk WRITE A REAL FUCKING PROGRAMMING LANGUAGE 
+	IFS=$IFS_OLD
+
 	# displays max tab index if verbose output is enabled
 	if [[ -v map_opts["verbose"] ]]; then
 		echo " max tab index: $tab_max"
@@ -419,7 +425,7 @@ write_file_bottom()
 	fi
 
 	# for every prototype in the current file...
-	for ((i=0; i < ${#prototype[@]}; i++)); do
+	for ((i=0; i < ${#prototype_all[@]}; i++)); do
 		local function
 		local name_fun
 		local fun_return
@@ -429,7 +435,7 @@ write_file_bottom()
 		local norminette_output
 
 		# gets function prototype
-		function=${prototype[i]}
+		function=${prototype_all[i]}
 
 		# shortens function name for display if in verbose mode
 		if [[ -v map_opts["verbose"] ]]; then
@@ -445,7 +451,7 @@ write_file_bottom()
 
 			# determines the number of tabs needed to align the prototype
 			tab_count=$(((tab_max - map_tab_end[i]) / 4))
-			tab_delta=$(printf "	"%.0s {1..$tab_count})
+			tab_delta=$(printf "\t%.0s" $(eval echo "{1..$tab_count}"))
 
 			# aligns the function prototype
 			function="$fun_return$tab_delta$fun_name"
@@ -490,16 +496,18 @@ write_file_bottom()
 #######################################
 main()
 {
+	local prototype_start
+	local prototype_stop
 	local files
 	local name_base
 	local name_file
 	local name_prot
-	local prototype
 	local import_extra
-	local tab_max
+	local tab_max	
 
 	declare -A map_include
 	declare -A map_struct
+	declare -a prototype_all
 	declare -a map_tab_start
 	declare -a map_tab_end
 
@@ -510,6 +518,9 @@ main()
 		echo -e $HELP
 		exit 0
 	fi
+
+	prototype_start=0
+	prototype_stop=0
 
 	if [[ -v map_opts["file"] ]]; then		# uses the provided file path
 		files=${map_opts["file"]}
@@ -525,6 +536,8 @@ main()
 	
 	# for every file...
 	for file in ${files[@]}; do
+		local prototype_grep
+
 		# displays file name if in verbose mode
 		if [[ -v map_opts["verbose"] ]]; then
 			echo -e "$BOLD$FG_WHITE$BG_GREEN[ $file ]$NORMAL"
@@ -538,11 +551,19 @@ main()
 		else
 			name_file="$name_base.h"
 		fi
+
+		prototype_start=$prototype_stop
+
 		# retrieves all functon prototypes in the file
-		prototype=($(grep -v 'static' $file | grep -oE $REGEX_PROTOTYPE))
+		prototype_grep=($(grep -v 'static' $file | grep -oE $REGEX_PROTOTYPE))
+
+		for prototype in ${prototype_grep[@]}; do
+			prototype_all[$prototype_stop]=$prototype
+			prototype_stop=$((prototype_stop + 1))
+		done
 
 		# if no prototype was found in the current file moves on to next file
-		if [[ ! $prototype ]]; then
+		if [[ ! $prototype_grep ]]; then
 			continue
 		fi
 
@@ -560,13 +581,13 @@ main()
 		fi
 
 		# for every function prototype in the current file...
-		for ((i=0; i < ${#prototype[@]}; i++)); do
+		for ((i=$prototype_start; i < $prototype_stop; i++)); do
 			local function
 			local struct
 			local j
 
 			# gets function prototype
-			function=${prototype[i]}
+			function=${prototype_all[i]}
 
 			# ...if "stddef" should be included...
 			if [[ ! -v map_include["stddef"] ]]; then
@@ -680,7 +701,7 @@ main()
 
 	if [[ -v map_opts["output"] ]]; then
 		write_file_bottom
-	fi
+	fi	
 }
 
 main "$@"
