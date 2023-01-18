@@ -251,6 +251,12 @@ parse_arguments()
 				i=$((i + 1))
 				shift 2
 				;;
+			--output|-o)		# specifies output file
+				map_opts["output"]=${args[$((i + 1))]}
+				# moves on to the next argument
+				i=$((i + 1))
+				shift 2
+				;;
 			--verbose|-v)		# activates verbose output
 				map_opts["verbose"]=1
 				shift
@@ -361,6 +367,121 @@ generate_banner()
 }
 
 #######################################
+# Writes header and inclusion protection
+# to file
+# Arguments:
+# 	Path to write to
+#######################################
+write_file_top()
+{
+	local name_file=$1
+
+	# the define name used to protect from double inclusions
+	name_prot=$(echo $name_file | tr '[:lower:]' '[:upper:]' | tr '.' '_')
+
+	# generates banner
+	if [[ -v map_opts["verbose"] ]]; then
+		echo -e "$ITALIC Generating banner$NORMAL"
+		generate_banner $name_file 1
+	else
+		generate_banner $name_file
+	fi
+	# adds header protection
+	echo ""                    >> $name_file
+	echo "#ifndef $name_prot"  >> $name_file
+	echo "# define $name_prot" >> $name_file
+	echo ""                    >> $name_file
+}
+
+#######################################
+# Writes function prototypes and closes
+# inclusion protection
+#######################################
+write_file_bottom()
+{
+	# unsets all include maps
+	for included in ${!map_include[@]}; do
+		unset map_include[$included]
+	done
+	for included in ${!map_struct[@]}; do
+		unset map_struct[$included]
+	done
+
+	# displays max tab index if verbose output is enabled
+	if [[ -v map_opts["verbose"] ]]; then
+		echo " max tab index: $tab_max"
+	fi
+
+	# if extra headers were imported...
+	if [[ $import_extra == 1 ]]; then
+		# ...adds a newline
+		echo "" >> $name_file
+	fi
+
+	# for every prototype in the current file...
+	for ((i=0; i < ${#prototype[@]}; i++)); do
+		local function
+		local name_fun
+		local fun_return
+		local fun_name
+		local tab_count
+		local tab_delta
+		local norminette_output
+
+		# gets function prototype
+		function=${prototype[i]}
+
+		# shortens function name for display if in verbose mode
+		if [[ -v map_opts["verbose"] ]]; then
+			name_fun=$(echo $function | grep -oE $REGEX_FUNCTION | sed -s 's/(//')
+		fi
+
+		# if function prototype need to be aligned (justified)
+		if [[ ${map_tab_end[i]} -lt $tab_max ]]; then
+			# splits the return section of the function prototype
+			fun_return=${function:0:${map_tab_start[i]}}
+			# splits the name section of the function prototype
+			fun_name=${function:${map_tab_start[i]}}
+
+			# determines the number of tabs needed to align the prototype
+			tab_count=$(((tab_max - map_tab_end[i]) / 4))
+			tab_delta=$(printf "	"%.0s {1..$tab_count})
+
+			# aligns the function prototype
+			function="$fun_return$tab_delta$fun_name"
+
+			# logs info message if in verbose mode
+			if [[ $name_fun ]]; then
+				echo " >> Justifying $name_fun by $tab_count tabs"
+			fi
+		fi
+
+		# logs info message if in verbose mode
+		if [[ $name_fun ]]; then	
+			echo -e "$BOLD$FG_GREEN >> Addding$NORMAL $name_fun to $BOLD$UNDERLINE$FG_WHITE$name_file$NORMAL"
+		fi
+
+		# adds prototype to the header
+		echo "$function;" >> $name_file
+	done
+
+	# closes start ifndef
+	echo "" >> $name_file
+	echo "#endif" >> $name_file
+
+	# displays norminette result if in verbose mode
+	if [[ -v map_opts["verbose"] ]]; then
+		norminette_output=$(norminette $name_file)	# gets norminette output
+		echo -e "$BOLD$FG_MAGENTA[ Norminette ]$NORMAL"
+		if [[ $norminette_output == *"OK"* ]]; then	
+			echo -e " $BOLD$FG_GREEN■ $norminette_output$NORMAL"
+		else
+			echo -e " $BOLD$FG_RED■ $norminette_output$NORMAL"
+		fi
+	fi
+}
+
+#######################################
 # main function, handles header extraction
 # for all specified files or all files in
 # specified directory
@@ -371,6 +492,7 @@ main()
 {
 	local files
 	local name_base
+	local name_file
 	local name_prot
 	local prototype
 	local import_extra
@@ -395,6 +517,12 @@ main()
 		files=$(find ${map_opts["dir"]} -name "*.c")
 	fi
 
+	# generates banner for output file
+	if [[ -v map_opts["output"] ]]; then
+		echo -e "$BOLD$FG_WHITE$BG_MAGENTA[ Writing to custom output ]$NORMAL"
+		write_file_top ${map_opts["output"]}
+	fi
+	
 	# for every file...
 	for file in ${files[@]}; do
 		# displays file name if in verbose mode
@@ -405,9 +533,11 @@ main()
 		# keeps only the file base (without the extension)
 		name_base=$(basename $file .c)
 		# the name of the header file
-		name_file="$name_base.h"
-		# the define name used to protect from double inclusions
-		name_prot=$(echo $name_file | tr '[:lower:]' '[:upper:]' | tr '.' '_')
+		if [[ -v map_opts["output"] ]]; then
+			name_file=${map_opts["output"]}
+		else
+			name_file="$name_base.h"
+		fi
 		# retrieves all functon prototypes in the file
 		prototype=($(grep -v 'static' $file | grep -oE $REGEX_PROTOTYPE))
 
@@ -417,24 +547,17 @@ main()
 		fi
 
 		# generates banner
-		if [[ -v map_opts["verbose"] ]]; then
-			echo -e "$ITALIC Generating banner$NORMAL"
-			generate_banner $name_file 1
-		else
-			generate_banner $name_file
+		if [[ ! -v map_opts["output"] ]]; then
+			write_file_top $name_file
+		fi	
+
+		if [[ ! $tab_max && ! -v map_opts["output"] ]]; then
+			# used to align function declerations
+			tab_max=0
+
+			# stores necessary includes
+			import_extra=0
 		fi
-
-		# adds header protection
-		echo ""                    >> $name_file
-		echo "#ifndef $name_prot"  >> $name_file
-		echo "# define $name_prot" >> $name_file
-		echo ""                    >> $name_file
-
-		# stores necessary includes
-		import_extra=0
-
-		# used to align function declerations
-		tab_max=0
 
 		# for every function prototype in the current file...
 		for ((i=0; i < ${#prototype[@]}; i++)); do
@@ -522,9 +645,9 @@ main()
 			fi
 			# ...if a struct is found...
 			struct=$(echo $function | grep -oE $REGEX_STRUCT | sed -s 's/t_//' | head -1)
-			if [[ $struct && ! -v map_struct[$file:$struct] ]]; then
+			if [[ $struct && ! -v map_struct["$struct"] ]]; then
 				# includes the header associated to that struct
-				map_struct["$file:$struct"]=1
+				map_struct["$struct"]=1
 				import_extra=1
 				echo "# include \"$struct.h\"" >> $name_file
 				# logs info message if in verbose mode
@@ -550,87 +673,14 @@ main()
 			fi
 		done
 
-		# unsets all include maps
-		for included in ${!map_include[@]}; do
-			unset map_include[$included]
-		done
-		for included in ${!map_struct[@]}; do
-			unset map_struct[$included]
-		done
-
-		# displays max tab index if verbose output is enabled
-		if [[ -v map_opts["verbose"] ]]; then
-			echo " max tab index: $tab_max"
-		fi
-
-		# if extra headers were imported...
-		if [[ $import_extra == 1 ]]; then
-			# ...adds a newline
-			echo "" >> $name_file
-		fi
-
-		# for every prototype in the current file...
-		for ((i=0; i < ${#prototype[@]}; i++)); do
-			local function
-			local name_fun
-			local fun_return
-			local fun_name
-			local tab_count
-			local tab_delta
-			local norminette_output
-
-			# gets function prototype
-			function=${prototype[i]}
-
-			# shortens function name for display if in verbose mode
-			if [[ -v map_opts["verbose"] ]]; then
-				name_fun=$(echo $function | grep -oE $REGEX_FUNCTION | sed -s 's/(//')
-			fi
-
-			# if function prototype need to be aligned (justified)
-			if [[ ${map_tab_end[i]} -lt $tab_max ]]; then
-				# splits the return section of the function prototype
-				fun_return=${function:0:${map_tab_start[i]}}
-				# splits the name section of the function prototype
-				fun_name=${function:${map_tab_start[i]}}
-
-				# determines the number of tabs needed to align the prototype
-				tab_count=$(((tab_max - map_tab_end[i]) / 4))
-				tab_delta=$(printf "	"%.0s {1..$tab_count})
-
-				# aligns the function prototype
-				function="$fun_return$tab_delta$fun_name"
-
-				# logs info message if in verbose mode
-				if [[ $name_fun ]]; then
-					echo " >> Justifying $name_fun by $tab_count tabs"
-				fi
-			fi
-
-			# logs info message if in verbose mode
-			if [[ $name_fun ]]; then	
-				echo -e "$BOLD$FG_GREEN >> Addding$NORMAL $name_fun to $BOLD$UNDERLINE$FG_WHITE$name_file$NORMAL"
-			fi
-
-			# adds prototype to the header
-			echo "$function;" >> $name_file
-		done
-
-		# closes start ifndef
-		echo "" >> $name_file
-		echo "#endif" >> $name_file
-
-		# displays norminette result if in verbose mode
-		if [[ -v map_opts["verbose"] ]]; then
-			norminette_output=$(norminette $name_file)	# gets norminette output
-			echo -e "$BOLD$FG_MAGENTA[ Norminette ]$NORMAL"
-			if [[ $norminette_output == *"OK"* ]]; then	
-				echo -e " $BOLD$FG_GREEN■ $norminette_output$NORMAL"
-			else
-				echo -e " $BOLD$FG_RED■ $norminette_output$NORMAL"
-			fi
+		if [[ ! -v map_opts["output"] ]]; then
+			write_file_bottom
 		fi
 	done
+
+	if [[ -v map_opts["output"] ]]; then
+		write_file_bottom
+	fi
 }
 
 main "$@"
