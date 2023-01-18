@@ -1,9 +1,9 @@
 # extract_headers
 
-**Extract_headers** is a bash tool for automatically extracting headers from all c
-files in directory. *extract_headers* supports recursive searching of files so
-you do not need to execute it in every directory containing your c files. Files
-**MUST** follow the 42 school norm for extraction to work. 
+**Extract_headers** is a bash tool that automates header creation for all c 
+files  in a directory. *extract_headers* supports recursive searching of files
+so you do not need to execute it in every directory containing your c files.
+Files **MUST** follow the 42 school norm for extraction to work. 
 
 To use *extract_headers*, run the following command.
 ```bash
@@ -18,6 +18,12 @@ or if you want to extract only one file
 
 Keep in mind that all header files will be extracted to the same directory
 *extract_headers* is being executed from.
+
+to specify output file, use
+
+```bash
+./extract_headers --dir path/to/file --output header.h
+```
 
 ## Standard Header Inclusion
 
@@ -47,4 +53,6 @@ extractor as long as you follow naming conventions.
 |-------------------------------|----------------------------------------|
 | extract_headers -h/--help     | displays help info for extract_headers |
 | extract_headers -d/--dir      | specifies where to look for c files    |
+| extract_headers -f/--file     | specifiese input file                  |
+| extract_headers -o/--output   | specifies output file                  |
 | extract_headers -v/--verbose  | toggles extra output                   |
