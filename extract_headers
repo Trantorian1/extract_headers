@@ -280,8 +280,7 @@ parse_arguments()
 		map_opts["dir"]="."
 	fi
 
-	IFS_OLD=$IFS
-	IFS=$'\n'
+	IFS_OLD=$IFS	
 }
 
 #######################################
@@ -379,6 +378,9 @@ write_file_top()
 {
 	local name_file=$1
 
+	# so banner actually works
+	IFS=$'\n'
+
 	# the define name used to protect from double inclusions
 	name_prot=$(echo $name_file | tr '[:lower:]' '[:upper:]' | tr '.' '_')
 
@@ -402,6 +404,9 @@ write_file_top()
 #######################################
 write_file_bottom()
 {
+	local prototype_start=$1
+	local prototype_stop=$2
+
 	# unsets all include maps
 	for included in ${!map_include[@]}; do
 		unset map_include[$included]
@@ -425,7 +430,7 @@ write_file_bottom()
 	fi
 
 	# for every prototype in the current file...
-	for ((i=0; i < ${#prototype_all[@]}; i++)); do
+	for ((i=$prototype_start; i < $prototype_stop; i++)); do
 		local function
 		local name_fun
 		local fun_return
@@ -533,10 +538,19 @@ main()
 		echo -e "$BOLD$FG_WHITE$BG_MAGENTA[ Writing to custom output ]$NORMAL"
 		write_file_top ${map_opts["output"]}
 	fi
-	
+
+	# used to align function declerations
+	tab_max=0
+
+	# stores necessary includes
+	import_extra=0
+
 	# for every file...
 	for file in ${files[@]}; do
 		local prototype_grep
+
+		# so grep actually works
+		IFS=$'\n'
 
 		# displays file name if in verbose mode
 		if [[ -v map_opts["verbose"] ]]; then
@@ -572,7 +586,7 @@ main()
 			write_file_top $name_file
 		fi	
 
-		if [[ ! $tab_max && ! -v map_opts["output"] ]]; then
+		if [[ ! -v map_opts["output"] ]]; then
 			# used to align function declerations
 			tab_max=0
 
@@ -695,12 +709,12 @@ main()
 		done
 
 		if [[ ! -v map_opts["output"] ]]; then
-			write_file_bottom
+			write_file_bottom $prototype_start $prototype_stop
 		fi
 	done
 
 	if [[ -v map_opts["output"] ]]; then
-		write_file_bottom
+		write_file_bottom 0 $prototype_stop
 	fi	
 }
 
