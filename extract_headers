@@ -117,7 +117,7 @@ inclusion is only done so as to simplify structure usage, not automate it.      
   Author: Eliot McNab, based on the code of JB Caron                               \n"
 
 # matches function prototypes in a file
-REGEX_PROTOTYPE='([a-zA-Z0-9_]+ ?)*	\**[a-z][a-z0-9_]+\(([a-zA-Z0-9_*]* [a-zA-Z0-9_,*\(\)]*)*.{3}?\)$'
+REGEX_PROTOTYPE='([a-zA-Z0-9_]+ ?)*	\**[a-z][a-z0-9_]+\(([a-zA-Z0-9_*]*( [a-zA-Z0-9_,*\(\)]*)?)*.{3}?\)'
 # matches function names in a prototype
 REGEX_FUNCTION='[a-zA-Z0-9_]*\('
 # matches structure types in prototype
